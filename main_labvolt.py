@@ -7,6 +7,8 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from widgets import MeasurementWidget
 from daq_reader import DAQReader
 from utils.styles import apply_app_style
+from widgets.oscilloscope_widget import OscilloscopeWidget
+
 
 # Ruta local del mini-logo según tu comentario
 _LOCAL_MINI_LOGO_PATH = r"C:\Users\Tepsi\Documents\LabVolt_Project\img\MiniLogo.png"
@@ -93,8 +95,10 @@ class MainLabVolt(QtWidgets.QMainWindow):
         self.tabs.addTab(self.measurement_panel, "Aparatos de medición")
 
         # placeholders para las otras pestañas
-        osc_tab = QtWidgets.QWidget(); osc_tab.setLayout(QtWidgets.QVBoxLayout()); osc_tab.layout().addWidget(QtWidgets.QLabel("Osciloscopio - pendiente de integrar"))
+        osc_tab = OscilloscopeWidget()
         self.tabs.addTab(osc_tab, "Osciloscopio")
+       # osc_tab = QtWidgets.QWidget(); osc_tab.setLayout(QtWidgets.QVBoxLayout()); osc_tab.layout().addWidget(QtWidgets.QLabel("Osciloscopio - pendiente de integrar"))
+       # self.tabs.addTab(osc_tab, "Osciloscopio")
         ph_tab = QtWidgets.QWidget(); ph_tab.setLayout(QtWidgets.QVBoxLayout()); ph_tab.layout().addWidget(QtWidgets.QLabel("Analizador de fasores - pendiente"))
         self.tabs.addTab(ph_tab, "Analizador de fasores")
         sp_tab = QtWidgets.QWidget(); sp_tab.setLayout(QtWidgets.QVBoxLayout()); sp_tab.layout().addWidget(QtWidgets.QLabel("Analizador de espectro - pendiente"))

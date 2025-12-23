@@ -1,93 +1,150 @@
-# widgets/oscilloscope_widget.py - osciloscopio con rejilla CRT, perillas y botones de memoria
-from PySide6 import QtWidgets, QtCore, QtGui
-import pyqtgraph as pg
-import numpy as np
+# widgets/oscilloscope_widget.py
+# Osciloscopio estilo LabVolt / Windows 95 (solo visual por ahora)
+
+from PySide6 import QtWidgets, QtGui, QtCore
+from widgets.channel_control_widget import ChannelControlWidget
+
+
+class OscilloscopeGrid(QtWidgets.QWidget):
+    """
+    Área de dibujo del osciloscopio:
+    - 10 columnas x 8 filas
+    - 5 subdivisiones por cuadro
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumSize(520, 420)
+        self.setStyleSheet("background: #008b8b;")
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, False)
+
+        w = self.width()
+        h = self.height()
+
+        cols = 10
+        rows = 8
+        sub = 5
+
+        col_w = w / cols
+        row_h = h / rows
+
+        # Líneas finas (subdivisiones)
+        pen_sub = QtGui.QPen(QtGui.QColor("#4fd1c5"))
+        pen_sub.setWidth(1)
+        painter.setPen(pen_sub)
+
+        for c in range(cols * sub + 1):
+            x = c * (w / (cols * sub))
+            painter.drawLine(int(x), 0, int(x), h)
+
+        for r in range(rows * sub + 1):
+            y = r * (h / (rows * sub))
+            painter.drawLine(0, int(y), w, int(y))
+
+        # Líneas principales
+        pen_main = QtGui.QPen(QtGui.QColor("#b2ffff"))
+        pen_main.setWidth(2)
+        painter.setPen(pen_main)
+
+        for c in range(cols + 1):
+            x = c * col_w
+            painter.drawLine(int(x), 0, int(x), h)
+
+        for r in range(rows + 1):
+            y = r * row_h
+            painter.drawLine(0, int(y), w, int(y))
+
+        # Cruz central
+        pen_center = QtGui.QPen(QtGui.QColor("white"))
+        pen_center.setWidth(2)
+        painter.setPen(pen_center)
+
+        painter.drawLine(w // 2, 0, w // 2, h)
+        painter.drawLine(0, h // 2, w, h // 2)
+
 
 class OscilloscopeWidget(QtWidgets.QWidget):
-    """Osciloscopio con panel derecho de controles parecido a la captura."""
-    def __init__(self, channel_list, parent=None):
+    """
+    Widget principal del osciloscopio LabVolt
+    """
+
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.channel_list = channel_list
         self._build_ui()
 
     def _build_ui(self):
-        # layout horizontal: plot (izq) + controles (der)
-        h = QtWidgets.QHBoxLayout(self)
-        # Plot principal
-        self.plot = pg.PlotWidget(title="Osciloscopio")
-        self.plot.getViewBox().setBackgroundColor((6,27,24))  # CRT dark
-        self.plot.showGrid(x=True, y=True, alpha=0.25)
-        self.plot.setLabel('left', 'Amplitud')
-        self.plot.setLabel('bottom', 't', units='s')
-        self.curves = {}
-        for i, ch in enumerate(self.channel_list):
-            pen = pg.mkPen(color=pg.intColor(i, hues=len(self.channel_list)), width=1.6)
-            self.curves[ch] = self.plot.plot([], [], pen=pen, name=ch)
-        h.addWidget(self.plot, 3)
+        main_layout = QtWidgets.QVBoxLayout(self)
 
-        # Panel derecho con controles estilo LabVolt
-        right = QtWidgets.QVBoxLayout()
-        # grupo de perillas: Time/Div y Volts/Div (usamos QDial para simular)
-        grp = QtWidgets.QGroupBox("Time/Div & Volts/Div")
-        gl = QtWidgets.QHBoxLayout(grp)
-        # Time/div dial
-        tdial_box = QtWidgets.QVBoxLayout()
-        self.tdial = QtWidgets.QDial()
-        self.tdial.setNotchesVisible(True)
-        self.tdial.setMinimum(0)
-        self.tdial.setMaximum(8)
-        tdial_box.addWidget(QtWidgets.QLabel("Time/Div"))
-        tdial_box.addWidget(self.tdial)
-        gl.addLayout(tdial_box)
-        # Volts/div dial
-        vdial_box = QtWidgets.QVBoxLayout()
-        self.vdial = QtWidgets.QDial()
-        self.vdial.setNotchesVisible(True)
-        self.vdial.setMinimum(0)
-        self.vdial.setMaximum(6)
-        vdial_box.addWidget(QtWidgets.QLabel("Volts/Div"))
-        vdial_box.addWidget(self.vdial)
-        gl.addLayout(vdial_box)
-        right.addWidget(grp)
+        # -------------------------
+        # Zona superior
+        # -------------------------
+        top_layout = QtWidgets.QHBoxLayout()
 
-        # controles de canal (checkbox + selector input)
-        ch_gb = QtWidgets.QGroupBox("Canales")
-        ch_layout = QtWidgets.QVBoxLayout(ch_gb)
-        self.channel_checks = {}
-        for ch in self.channel_list:
-            row = QtWidgets.QHBoxLayout()
-            cb = QtWidgets.QCheckBox(ch)
-            cb.setChecked(True)
-            sel = QtWidgets.QComboBox()
-            sel.addItems(["E1","E2","E3","I1","I2","I3","Ninguno"])
-            row.addWidget(cb)
-            row.addWidget(sel)
-            ch_layout.addLayout(row)
-            self.channel_checks[ch] = (cb, sel)
-        right.addWidget(ch_gb)
+        # Izquierda: grilla
+        self.scope_grid = OscilloscopeGrid()
+        top_layout.addWidget(self.scope_grid, stretch=3)
 
-        # botones de memoria (store/recall) estilo caja
-        mem_box = QtWidgets.QHBoxLayout()
-        for i in range(1,5):
-            b = QtWidgets.QPushButton(f"M{i}")
-            b.setFixedSize(36,28)
-            mem_box.addWidget(b)
-        right.addLayout(mem_box)
+        # Derecha: controles de canales
+        channels_layout = QtWidgets.QGridLayout()
+        channels_layout.setSpacing(6)
 
-        right.addStretch(1)
-        h.addLayout(right, 1)
-        self.setLayout(h)
+        channel_defs = [
+            ("Can1 (X)", QtGui.QColor("lime")),
+            ("Can2 (Y)", QtGui.QColor("yellow")),
+            ("Can3", QtGui.QColor("cyan")),
+            ("Can4", QtGui.QColor("red")),
+            ("Can5", QtGui.QColor("white")),
+            ("Can6", QtGui.QColor("white")),
+            ("Can7", QtGui.QColor("white")),
+            ("Can8", QtGui.QColor("white")),
+        ]
 
-    def update_data(self, data):
-        # actualiza trazas normalizadas por su propia amplitud para verse correctamente
-        t = data.get("t")
-        if t is None: return
-        t_arr = np.array(t, dtype=float)
-        for ch, curve in self.curves.items():
-            arr = data.get(ch)
-            if arr is None: continue
-            y = np.array(arr, dtype=float)
-            # normalización pero preservando forma para semblanza a captura
-            maxv = np.max(np.abs(y)) if y.size else 1.0
-            scale = 1.0 if maxv == 0 else maxv
-            curve.setData(t_arr, y/scale)
+        for i, (name, color) in enumerate(channel_defs):
+            ch = ChannelControlWidget(name, color)
+            channels_layout.addWidget(ch, i // 2, i % 2)
+
+        top_layout.addLayout(channels_layout, stretch=2)
+        main_layout.addLayout(top_layout)
+
+        # -------------------------
+        # Zona inferior
+        # -------------------------
+        bottom_layout = QtWidgets.QHBoxLayout()
+
+        # Izquierda: tabla de datos
+        data_group = QtWidgets.QGroupBox("Datos Formas de ondas")
+        data_layout = QtWidgets.QVBoxLayout(data_group)
+
+        table = QtWidgets.QTableWidget(4, 4)
+        table.setHorizontalHeaderLabels(["Cursores", "EFI", "PRO", "f (Hz)"])
+        table.verticalHeader().setVisible(False)
+        table.setStyleSheet(
+            """
+            QTableWidget {
+                background: #ffffff;
+                border: 2px solid #808080;
+            }
+            """
+        )
+        data_layout.addWidget(table)
+        bottom_layout.addWidget(data_group, stretch=3)
+
+        # Derecha: base de tiempo
+        time_group = QtWidgets.QGroupBox("Base de tiempo")
+        time_layout = QtWidgets.QVBoxLayout(time_group)
+
+        time_combo = QtWidgets.QComboBox()
+        time_combo.addItems([
+            "0.2 ms/div",
+            "0.5 ms/div",
+            "1 ms/div",
+            "100 ms/div",
+            "1 s/div"
+        ])
+        time_layout.addWidget(time_combo)
+        bottom_layout.addWidget(time_group, stretch=1)
+
+        main_layout.addLayout(bottom_layout)
