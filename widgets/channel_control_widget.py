@@ -180,7 +180,7 @@ class ChannelControlWidget(QtWidgets.QGroupBox):
                     "500 W/div."
                 ])
 
-    # ---------------- TEMPERATURA ----------------
+    # ---------------- TORQUE ----------------
             elif text == "T":
                 self.volt_combo.addItems([
                     "0.1 N.m/div.",
@@ -192,7 +192,7 @@ class ChannelControlWidget(QtWidgets.QGroupBox):
                     "10 N.m/div."
                 ])
 
-    # ---------------- NEUTRO ----------------
+    # ---------------- VELOCIDAD ----------------
             elif text == "N":
                 self.volt_combo.addItems([
                     "20 rpm/div.",
