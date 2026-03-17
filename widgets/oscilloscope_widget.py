@@ -2,6 +2,7 @@
 # Osciloscopio estilo LabVolt / Windows 95 (solo visual por ahora)
 
 from PySide6 import QtWidgets, QtGui, QtCore
+import math
 from widgets.channel_control_widget import ChannelControlWidget
 
 
@@ -14,12 +15,27 @@ class OscilloscopeGrid(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(520, 420)
+
+        self.phase = 0
+        self.time_scale = 1
+        self.channel_data = []
+        #self.setMinimumSize(520, 420)
         #self.setStyleSheet("background: #008b8b;")
+
+        self.trigger_level = 0
+        self.trigger_enabled = True
+
+        self.cursor1 = 200
+        self.cursor2 = 400
+
+        self.real_signals = None
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         painter.fillRect(self.rect(), QtGui.QColor("#008b8b"))
+        #fade = QtGui.QColor(0, 40, 40, 40)
+        #painter.fillRect(self.rect(), fade)
+
         painter.setRenderHint(QtGui.QPainter.Antialiasing, False)
 
         w = self.width()
@@ -76,7 +92,89 @@ class OscilloscopeGrid(QtWidgets.QWidget):
             x = int(i * (col_w / subdivisions))
             painter.drawLine(x, cy - tick_size, x, cy + tick_size)
 
+        # -------------------------
+        # Señal de prueba
+        # -------------------------
+        
+        '''pen_signal = QtGui.QPen(QtGui.QColor(0,255,0))
+        pen_signal.setWidth(2)
+        painter.setPen(pen_signal)
 
+        points = []
+
+        amplitude = h / 4
+        center = h / 2
+
+        for x in range(w):
+
+            t = (x / w) * 4 * math.pi * self.time_scale
+
+            y = center + amplitude * math.sin(t + self.phase)
+
+            points.append(QtCore.QPointF(x, y))
+
+        painter.drawPolyline(points)'''
+
+        
+        colors = [
+            QtGui.QColor("green"),
+            QtGui.QColor("yellow"),
+            QtGui.QColor("violet"),
+            QtGui.QColor("red"),
+            QtGui.QColor("orange"),
+            QtGui.QColor("blue"),
+            QtGui.QColor("black"),
+            QtGui.QColor("brown")
+            ]
+
+        center = h / 2
+
+        trigger_y = center + self.trigger_level
+
+        amplitude = h / 4
+
+        for i, ch in enumerate(self.channel_data):
+
+            entry = ch["entry"]
+
+            if entry == "Ninguna":
+             continue
+
+            pen = QtGui.QPen(colors[i])
+            pen.setWidth(2)
+
+            painter.setPen(pen)
+
+            points = []
+
+            for x in range(w):
+
+                t = (x / w) * 4 * math.pi * self.time_scale
+
+                y = center + amplitude * math.sin(t + self.phase + i)
+
+                points.append(QtCore.QPointF(x, y))
+
+            painter.drawPolyline(points)
+
+        cursor_pen = QtGui.QPen(QtGui.QColor("white"))
+        cursor_pen.setStyle(QtCore.Qt.DashLine)
+        cursor_pen.setWidth(1)
+
+        painter.setPen(cursor_pen)
+
+        painter.drawLine(self.cursor1,0,self.cursor1,h)
+        painter.drawLine(self.cursor2,0,self.cursor2,h)
+
+    def mouseMoveEvent(self,event):
+
+        if event.buttons() & QtCore.Qt.LeftButton:
+            self.cursor1 = int(event.position().x())
+
+        if event.buttons() & QtCore.Qt.RightButton:
+            self.cursor2 = int(event.position().x())
+
+        self.update()
 
 class OscilloscopeWidget(QtWidgets.QWidget):
     """
@@ -85,7 +183,25 @@ class OscilloscopeWidget(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # estado del osciloscopio
+        self.phase = 0
+        self.time_scale = 1
+        self.coupling_mode = "DC"
+
+        # canales activos
+        self.active_channels = {
+            "A": True,
+            "B": False
+        }
+
         self._build_ui()
+
+        # timer animación
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.animate)
+        self.timer.start(30)
+
 
     def _build_ui(self):
         main_layout = QtWidgets.QVBoxLayout(self)
@@ -114,8 +230,14 @@ class OscilloscopeWidget(QtWidgets.QWidget):
             ("Can8", QtGui.QColor("brown")),
         ]
 
+        self.channels = []
+
         for i, (name, color) in enumerate(channel_defs):
+
             ch = ChannelControlWidget(name, color)
+
+            self.channels.append(ch)
+
             channels_layout.addWidget(ch, i // 2, i % 2)
 
         top_layout.addLayout(channels_layout, stretch=2)
@@ -148,8 +270,8 @@ class OscilloscopeWidget(QtWidgets.QWidget):
         time_group = QtWidgets.QGroupBox("Base de tiempo")
         time_layout = QtWidgets.QVBoxLayout(time_group)
 
-        time_combo = QtWidgets.QComboBox()
-        time_combo.addItems([
+        self.time_combo = QtWidgets.QComboBox()
+        self.time_combo.addItems([
             "0.2 ms/div.",
             "0.5 ms/div.",
             "1 ms/div.",
@@ -167,7 +289,59 @@ class OscilloscopeWidget(QtWidgets.QWidget):
             "5 s/div.",
             "10 s/div."
         ])
-        time_layout.addWidget(time_combo)
+        time_layout.addWidget(self.time_combo)
+
+        self.time_combo.currentTextChanged.connect(self.update_timebase)
+
         bottom_layout.addWidget(time_group, stretch=1)
 
         main_layout.addLayout(bottom_layout)
+
+
+    def update_timebase(self, text):
+
+        mapping = {
+            "0.2 ms/div.": 6,
+            "0.5 ms/div.": 4,
+            "1 ms/div.": 2,
+            "5 ms/div.": 1,
+            "10 ms/div.": 0.8,
+            "20 ms/div.": 0.6,
+            "50 ms/div.": 0.4,
+            "100 ms/div.": 0.2,
+            "0.2 s/div.": 0.1,
+            "0.5 s/div.": 0.05,
+            "1 s/div.": 0.02
+        }
+
+        self.time_scale = mapping.get(text, 1)
+
+    def animate(self):
+
+        self.phase += 0.1
+
+        # leer configuración de canales
+        channel_data = []
+
+        for ch in self.channels:
+
+            entry = ch.get_entry()
+            scale = ch.get_scale()
+            coupling = ch.get_coupling()
+
+            channel_data.append({
+            "entry": entry,
+            "scale": scale,
+            "coupling": coupling
+            })
+
+        self.scope_grid.phase = self.phase
+        self.scope_grid.time_scale = self.time_scale
+        self.scope_grid.channel_data = channel_data
+
+        self.scope_grid.update()  
+
+    def update_signals(self, data):
+
+        self.scope_grid.real_signals = data
+        self.scope_grid.update()

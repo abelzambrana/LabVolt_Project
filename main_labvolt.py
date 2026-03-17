@@ -128,6 +128,8 @@ class MainLabVolt(QtWidgets.QMainWindow):
                 val = float(_np.sqrt(_np.mean(_np.array(arr)**2)))
             self.measurement_panel.set_value(ch_name, val)
 
+        self.oscilloscope_widget.update_signals(data)
+
     def _on_refresh(self):
         """Comando del menú Actualizar: recalcula usando último bloque si existe."""
         if self._last_data is not None:

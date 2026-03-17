@@ -207,3 +207,21 @@ class ChannelControlWidget(QtWidgets.QGroupBox):
     # ---------------- NINGUNA ----------------
             else:
                 self.volt_combo.addItem("Sin señal")
+
+    # ---------------------------------------------------
+    # Métodos para que el osciloscopio lea la configuración
+    # ---------------------------------------------------
+
+    def get_entry(self):
+        return self.entry_combo.currentText()
+
+
+    def get_scale(self):
+        return self.volt_combo.currentText()
+
+
+    def get_coupling(self):
+        btn = self.coupling_group.checkedButton()
+        if btn:
+            return btn.text()
+        return "⎓"
