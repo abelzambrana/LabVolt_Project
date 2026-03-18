@@ -8,6 +8,8 @@ from widgets import MeasurementWidget
 from daq_reader import DAQReader
 from utils.styles import apply_app_style
 from widgets.oscilloscope_widget import OscilloscopeWidget
+from widgets.phasor_widget import PhasorWidget
+
 
 
 # Ruta local del mini-logo según tu comentario
@@ -102,10 +104,15 @@ class MainLabVolt(QtWidgets.QMainWindow):
         osc_tab = self.oscilloscope_widget
 
         self.tabs.addTab(osc_tab, "Osciloscopio")
-       # osc_tab = QtWidgets.QWidget(); osc_tab.setLayout(QtWidgets.QVBoxLayout()); osc_tab.layout().addWidget(QtWidgets.QLabel("Osciloscopio - pendiente de integrar"))
-       # self.tabs.addTab(osc_tab, "Osciloscopio")
-        ph_tab = QtWidgets.QWidget(); ph_tab.setLayout(QtWidgets.QVBoxLayout()); ph_tab.layout().addWidget(QtWidgets.QLabel("Analizador de fasores - pendiente"))
-        self.tabs.addTab(ph_tab, "Analizador de fasores")
+        #osc_tab = QtWidgets.QWidget(); osc_tab.setLayout(QtWidgets.QVBoxLayout()); osc_tab.layout().addWidget(QtWidgets.QLabel("Osciloscopio - pendiente de integrar"))
+        #self.tabs.addTab(osc_tab, "Osciloscopio")
+        #ph_tab = QtWidgets.QWidget(); ph_tab.setLayout(QtWidgets.QVBoxLayout()); ph_tab.layout().addWidget(QtWidgets.QLabel("Analizador de fasores - pendiente"))
+        #self.tabs.addTab(ph_tab, "Analizador de fasores")
+        # -------------------------
+        # Analizador de fasores REAL
+        # -------------------------
+        self.phasor_widget = PhasorWidget()
+        self.tabs.addTab(self.phasor_widget, "Analizador de fasores")
         sp_tab = QtWidgets.QWidget(); sp_tab.setLayout(QtWidgets.QVBoxLayout()); sp_tab.layout().addWidget(QtWidgets.QLabel("Analizador de espectro - pendiente"))
         self.tabs.addTab(sp_tab, "Analizador de espectro")
         harm_tab = QtWidgets.QWidget(); harm_tab.setLayout(QtWidgets.QVBoxLayout()); harm_tab.layout().addWidget(QtWidgets.QLabel("Analizador de armónicos - pendiente"))
@@ -137,7 +144,10 @@ class MainLabVolt(QtWidgets.QMainWindow):
 
         if hasattr(self, "oscilloscope_widget"):
             self.oscilloscope_widget.update_signals(data)
-
+        
+        #PARA CONECTAR PHASOR AL DAQ
+        if hasattr(self, "phasor_widget"):
+            self.phasor_widget.update_data(data)
 
 
     def _on_refresh(self):
