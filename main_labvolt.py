@@ -95,7 +95,12 @@ class MainLabVolt(QtWidgets.QMainWindow):
         self.tabs.addTab(self.measurement_panel, "Aparatos de medición")
 
         # placeholders para las otras pestañas
-        osc_tab = OscilloscopeWidget()
+
+        #osc_tab = OscilloscopeWidget()
+        self.oscilloscope_widget = OscilloscopeWidget()
+
+        osc_tab = self.oscilloscope_widget
+
         self.tabs.addTab(osc_tab, "Osciloscopio")
        # osc_tab = QtWidgets.QWidget(); osc_tab.setLayout(QtWidgets.QVBoxLayout()); osc_tab.layout().addWidget(QtWidgets.QLabel("Osciloscopio - pendiente de integrar"))
        # self.tabs.addTab(osc_tab, "Osciloscopio")
@@ -129,6 +134,11 @@ class MainLabVolt(QtWidgets.QMainWindow):
             self.measurement_panel.set_value(ch_name, val)
 
         self.oscilloscope_widget.update_signals(data)
+
+        if hasattr(self, "oscilloscope_widget"):
+            self.oscilloscope_widget.update_signals(data)
+
+
 
     def _on_refresh(self):
         """Comando del menú Actualizar: recalcula usando último bloque si existe."""
