@@ -9,7 +9,7 @@ from daq_reader import DAQReader
 from utils.styles import apply_app_style
 from widgets.oscilloscope_widget import OscilloscopeWidget
 from widgets.phasor_widget import PhasorWidget
-
+from widgets.data_table_widget import DataTableWidget
 
 
 # Ruta local del mini-logo según tu comentario
@@ -117,8 +117,10 @@ class MainLabVolt(QtWidgets.QMainWindow):
         self.tabs.addTab(sp_tab, "Analizador de espectro")
         harm_tab = QtWidgets.QWidget(); harm_tab.setLayout(QtWidgets.QVBoxLayout()); harm_tab.layout().addWidget(QtWidgets.QLabel("Analizador de armónicos - pendiente"))
         self.tabs.addTab(harm_tab, "Analizador de armónicos")
-        table_tab = QtWidgets.QWidget(); table_tab.setLayout(QtWidgets.QVBoxLayout()); table_tab.layout().addWidget(QtWidgets.QLabel("Tabla de datos - pendiente"))
-        self.tabs.addTab(table_tab, "Tabla de datos")
+        #table_tab = QtWidgets.QWidget(); table_tab.setLayout(QtWidgets.QVBoxLayout()); table_tab.layout().addWidget(QtWidgets.QLabel("Tabla de datos - pendiente"))
+        #self.tabs.addTab(table_tab, "Tabla de datos")
+        self.data_table_widget = DataTableWidget()
+        self.tabs.addTab(self.data_table_widget, "Tabla de datos")
 
         # estado
         self.setCentralWidget(central)
