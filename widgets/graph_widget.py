@@ -15,10 +15,10 @@ class GraphDisplay(QtWidgets.QWidget):
         h = self.height()
 
         # Fondo gris exterior
-        painter.fillRect(self.rect(), QtGui.QColor("#c0c0c0"))
+        painter.fillRect(self.rect(), QtGui.QColor("#0a7f7f"))
 
         # Área de gráfico (verde)
-        margin = 20
+        margin = 40
         rect = QtCore.QRect(margin, margin, w - 2*margin, h - 2*margin)
 
         painter.fillRect(rect, QtGui.QColor("#0a7f7f"))
@@ -40,8 +40,8 @@ class GraphDisplay(QtWidgets.QWidget):
             painter.drawLine(int(x), rect.bottom() - 5, int(x), rect.bottom() + 5)
 
         # ticks Y
-        for i in range(11):
-            y = rect.bottom() - i * rect.height() / 10
+        for i in range(26):
+            y = rect.bottom() - i * rect.height() / 25
             painter.drawLine(rect.left() - 5, int(y), rect.left() + 5, int(y))
 
         # números

@@ -216,7 +216,7 @@ class PhasorWidget(QtWidgets.QWidget):
         ref_layout = QtWidgets.QVBoxLayout(ref_group)
 
         self.ref_combo = QtWidgets.QComboBox()
-        self.ref_combo.addItems(["E1", "E2", "E3"])
+        self.ref_combo.addItems(["E1", "E2", "E3", "I1", "I2", "I3"])
 
         ref_layout.addWidget(self.ref_combo)
 
