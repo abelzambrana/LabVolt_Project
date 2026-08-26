@@ -5,8 +5,8 @@ from PySide6 import QtWidgets, QtGui, QtCore
 import os
 
 # Ruta absoluta a la fuente (confirmada por el usuario)
-_FONT_ABS_PATH = r"C:\Users\Tepsi\Documents\LabVolt_Project\fonts\digital-7.ttf"
-
+#_FONT_ABS_PATH = r"C:\Users\Tepsi\Documents\LabVolt_Project\fonts\digital-7.ttf"
+_FONT_ABS_PATH = r"C:\Users\ABEL Z\Documents\LabVolt_Project\fonts\digital-7.ttf"
 class ClickableLabel(QtWidgets.QLabel):
     """QLabel que emite clicked() al pulsar (usado para nombre del display)."""
     clicked = QtCore.Signal()
