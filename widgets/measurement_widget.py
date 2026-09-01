@@ -42,8 +42,12 @@ class MeasurementWidget(QtWidgets.QWidget):
             # asignación de mode_type (con excepción para N)
             if t_up.startswith("E") or t_up.startswith("I"):
                 mode_type = "ca_cc"
-            elif t_up.startswith("PQS"):
-                mode_type = "pqs"
+            elif t_up.startswith("PQS1"):
+                mode_type = "pqs1"
+            elif t_up.startswith("PQS2"):
+                mode_type = "pqs2"
+            elif t_up.startswith("PQS3"):
+                mode_type = "pqs3"
             elif t_up.startswith("T") or t_up.startswith("PM"):
                 mode_type = "nc_c"
             elif t_up.startswith("N"):

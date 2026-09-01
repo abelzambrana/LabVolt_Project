@@ -56,7 +56,9 @@ class DisplayWidget(QtWidgets.QFrame):
         self._modes = {
             "ca_cc": (["CA", "CC"], [self.unit_base, self.unit_base]),
             "nc_c":  (["NC", "C"], [self.unit_base, self.unit_base]),
-            "pqs":   (["P", "Q", "S"], ["W", "VAR", "VA"]),
+            "pqs1":   (["P1", "Q1", "S1"], ["W", "VAR", "VA"]),
+            "pqs2":   (["P2", "Q2", "S2"], ["W", "VAR", "VA"]),
+            "pqs3":   (["P3", "Q3", "S3"], ["W", "VAR", "VA"]),
             "none":  ([""], [self.unit_base]),
             "none_with_button": ([""], [self.unit_base]),
         }
